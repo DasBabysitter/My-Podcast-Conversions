@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PLO Battle Plan – Episode 6</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Arial,sans-serif;overflow:hidden;}
+#scaler-wrapper{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#slide-canvas{width:1280px;height:720px;position:relative;background:#1a1a2e;overflow:hidden;transform-origin:center center;}
+
+/* ── TOP BAR ── */
+#top-bar{position:absolute;top:0;left:0;right:0;height:64px;background:#0d0d1a;border-bottom:2px solid #c9a84c;display:flex;align-items:center;padding:0 16px;z-index:10;}
+#clp-logo{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#tbi{display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px;position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;}
+#tbi .dot{color:#c9a84c;font-size:20px;}
+#tbi .stakes{color:#c9a84c;}
+#tbi .dec{color:#fff;font-weight:400;font-size:15px;letter-spacing:1px;}
+#ts{color:#888;font-size:13px;flex-shrink:0;position:absolute;right:16px;top:50%;transform:translateY(-50%);z-index:11;}
+
+/* ── PROGRESS SLIDER ── */
+#progress-wrapper{position:absolute;bottom:58px;left:0;right:0;height:20px;cursor:pointer;z-index:20;display:flex;align-items:center;}
+#progress-track{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:4px;background:rgba(201,168,76,.25);}
+#progress-fill{height:100%;background:#c9a84c;width:0%;pointer-events:none;}
+#progress-handle{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;background:#c9a84c;border-radius:50%;left:0%;pointer-events:none;box-shadow:0 0 4px rgba(0,0,0,.6);}
+#progress-wrapper:hover #progress-handle{width:18px;height:18px;}
+
+/* ── BOTTOM BAR ── */
+#bottom-box{position:absolute;bottom:0;left:0;right:0;height:68px;background:rgba(10,10,20,.93);border-top:2px solid #c9a84c;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10;}
+#bottom-text{font-style:italic;color:#e8e8e8;font-size:14px;line-height:1.4;flex:1;padding-right:16px;}
+#nav{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#nav button{background:#222;color:#fff;border:1px solid #555;padding:6px 16px;border-radius:4px;font-size:13px;cursor:pointer;}
+#nav button:hover{background:#444;}
+#nav button.pb{background:#c9a84c;color:#000;font-weight:700;border-color:#c9a84c;min-width:90px;}
+#nav button.pb:hover{background:#e0be6a;}
+#nav .sn{color:#aaa;font-size:13px;white-space:nowrap;min-width:40px;text-align:center;}
+#speed-wrap{position:relative;}
+#speed-menu{display:none;position:absolute;bottom:100%;left:0;margin-bottom:6px;background:#1a1a2e;border:1px solid #c9a84c;border-radius:4px;overflow:hidden;z-index:30;box-shadow:0 2px 8px rgba(0,0,0,.5);}
+#speed-menu.open{display:block;}
+.speed-opt{padding:7px 16px;color:#fff;font-size:13px;cursor:pointer;white-space:nowrap;}
+.speed-opt:hover{background:#444;}
+.speed-opt.active{color:#c9a84c;font-weight:700;}
+
+/* ── HAND SLIDE LAYOUT ── */
+#action-zone{position:absolute;top:64px;right:0;width:355px;bottom:68px;background:rgba(8,8,18,.88);border-left:1px solid #333;padding:10px;overflow-y:hidden;z-index:5;display:flex;flex-direction:column;gap:8px;}
+.ab{background:rgba(255,255,255,.04);border:1px solid #333;border-radius:5px;padding:7px 9px;}
+.ab .sl{font-size:12px;font-weight:800;color:#c9a84c;letter-spacing:1.5px;margin-bottom:4px;text-transform:uppercase;}
+.ab .al{font-size:12px;color:#ddd;line-height:1.5;}
+.ab .al .pos{color:#aaa;font-weight:600;}
+.ab .al .act{color:#fff;font-weight:700;}
+.ab .al .hq{color:#c9a84c;font-weight:700;}
+.ab .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 6px;}
+#table-zone{position:absolute;top:64px;left:0;right:355px;bottom:68px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#tsv{width:100%;height:100%;overflow:visible;}
+
+/* ── CONCEPT SLIDE LAYOUT ── */
+#concept-zone{position:absolute;top:64px;left:0;right:0;bottom:68px;padding:28px 72px;display:none;flex-direction:column;justify-content:center;}
+#concept-zone h2{font-size:2.7rem;font-weight:900;color:#c9a84c;margin-bottom:22px;letter-spacing:.5px;border-bottom:1px solid rgba(201,168,76,.3);padding-bottom:12px;}
+#concept-zone ul{list-style:none;display:flex;flex-direction:column;gap:18px;}
+#concept-zone ul li{font-size:1.45rem;line-height:1.5;color:#e8e8e8;padding-left:28px;position:relative;}
+#concept-zone ul li::before{content:'▸';position:absolute;left:0;color:#c9a84c;}
+#concept-zone ul li.sub{font-size:1.25rem;padding-left:48px;color:#aaa;}
+#concept-zone ul li.sub::before{content:'–';left:26px;color:#666;}
+#concept-zone .insight-box{margin-top:24px;padding:16px 20px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:6px;font-size:1.2rem;color:#e8e8e8;line-height:1.55;font-style:italic;}
+#concept-zone .result-row{margin-top:10px;padding:12px 16px;background:rgba(255,255,255,.04);border-left:3px solid #c9a84c;border-radius:3px;font-size:1.15rem;color:#e8e8e8;line-height:1.5;}
+#concept-zone .result-row strong{color:#c9a84c;}
+#concept-zone .street-block{margin-bottom:16px;}
+#concept-zone .street-label{font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:4px;}
+#concept-zone .street-action{font-size:1.2rem;line-height:1.55;color:#e8e8e8;}
+#concept-zone .pre-label{font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:4px;}
+#concept-zone .pre-action{font-size:1.2rem;line-height:1.55;color:#e8e8e8;margin-bottom:16px;}
+.card-inline{display:inline-flex;align-items:center;justify-content:center;background:#fff;border-radius:3px;padding:1px 5px;font-size:.9em;font-weight:700;line-height:1;margin:0 1px;vertical-align:middle;border:1px solid #ccc;min-width:24px;}
+.card-inline.h{color:#d42020;}
+.card-inline.d{color:#1a5fd4;}
+.card-inline.c{color:#1a8c1a;}
+.card-inline.s{color:#111;}
+.card-inline.u{color:#000;}
+
+/* ── TITLE SLIDE ── */
+#title-zone{position:absolute;top:64px;left:0;right:0;bottom:68px;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px;}
+#title-zone h1{font-size:3.2rem;font-weight:900;color:#fff;line-height:1.1;letter-spacing:1px;}
+#title-zone .subtitle{margin-top:18px;font-size:1.1rem;color:#aaa;}
+#title-zone .subtitle.big{font-size:2.2rem;line-height:1.25;}
+#title-zone .host{margin-top:14px;font-size:1.9rem;color:#c9a84c;font-weight:700;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div id="scaler-wrapper"><div id="slide-canvas">
+
+<div id="top-bar">
+  <div id="clp-logo">
+    <div style="font-size:32px;font-weight:900;color:#fff;letter-spacing:2px;font-family:Arial,sans-serif;">CLP</div>
+  </div>
+  <div id="tbi">
+    <span id="tb-hand">PLO BATTLE PLAN</span><span class="dot">·</span>
+    <span class="stakes" id="tb-stakes">$1/$2/$5 PLO</span><span class="dot" id="tb-stakes-dot">·</span>
+    <span class="dec" id="tb-dec">EPISODE 6</span>
+  </div>
+  <div id="ts">0:00</div>
+</div>
+
+<!-- Hand slide zones -->
+<div id="table-zone">
+  <svg id="tsv" viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="fg" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#2d8a4e"/>
+        <stop offset="100%" stop-color="#1a5e32"/>
+      </radialGradient>
+      <pattern id="cbp" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+        <rect width="8" height="8" fill="#8b0000"/>
+        <rect x="0" y="0" width="4" height="8" fill="#6b0000"/>
+      </pattern>
+      <filter id="ds"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000" flood-opacity=".5"/></filter>
+    </defs>
+    <ellipse cx="460" cy="283" rx="309" ry="193" fill="#3d2b1f" filter="url(#ds)"/>
+    <ellipse cx="460" cy="283" rx="295" ry="180" fill="none" stroke="#c9a84c" stroke-width="3"/>
+    <ellipse cx="460" cy="283" rx="292" ry="176" fill="url(#fg)"/>
+    <g id="sl"></g><g id="pl"></g><g id="bl"></g><g id="btl"></g>
+  </svg>
+</div>
+<div id="action-zone"><div id="ab-container"></div></div>
+
+<!-- Concept slide zone -->
+<div id="concept-zone"></div>
+
+<!-- Title slide zone -->
+<div id="title-zone"></div>
+
+<!-- Progress slider -->
+<div id="progress-wrapper">
+  <div id="progress-track">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="progress-handle"></div>
+</div>
+
+<div id="bottom-box">
+  <p id="bt" style="color:#e8e8e8;font-style:italic;font-size:14px;line-height:1.4;flex:1;padding-right:16px;"></p>
+  <div id="nav">
+    <button onclick="skipPrev()">◀ Prev</button>
+    <button class="pb" id="play-btn" onclick="togglePlay()">▶ Play</button>
+    <button onclick="skipNext()">Next ▶</button>
+    <div id="speed-wrap">
+      <button id="speed-btn" onclick="toggleSpeedMenu(event)">1x ▾</button>
+      <div id="speed-menu">
+        <div class="speed-opt active" data-rate="1" onclick="setSpeed(1)">1x</div>
+        <div class="speed-opt" data-rate="1.25" onclick="setSpeed(1.25)">1.25x</div>
+        <div class="speed-opt" data-rate="1.5" onclick="setSpeed(1.5)">1.5x</div>
+        <div class="speed-opt" data-rate="1.75" onclick="setSpeed(1.75)">1.75x</div>
+        <div class="speed-opt" data-rate="2" onclick="setSpeed(2)">2x</div>
+      </div>
+    </div>
+    <span class="sn" id="snb">1/19</span>
+  </div>
+</div>
+
+<audio id="aud" src="PLOBattlePlanPodcast0006_web.mp3"></audio>
+
+</div></div>
+<script>
+// ── SCALE ──
+function scaleCanvas(){
+  const c=document.getElementById('slide-canvas'),w=document.getElementById('scaler-wrapper');
+  c.style.transform=`scale(${Math.min(w.clientWidth/1280,w.clientHeight/720)})`;
+}
+window.addEventListener('resize',scaleCanvas);scaleCanvas();
+
+// ── GEOMETRY ──
+const CX=460,CY=283,RX=292,RY=176,ORAX=342,ORAY=224;
+function seatPos(deg){
+  const r=deg*Math.PI/180;
+  return{x:CX-ORAX*Math.sin(r), y:CY+ORAY*Math.cos(r)};
+}
+
+// ── SEATS ──
+const SEATS={
+  hero:{angle:0,   label:'Hero',  stack:1300, empty:false, heroPos:'BB'},
+  sb:  {angle:320, label:'SB',    stack:595,  empty:false},
+  btn: {angle:280, label:'BTN',   stack:595,  empty:false},
+  co:  {angle:240, label:'CO',    stack:595,  empty:false},
+  hj:  {angle:200, label:'HJ',    stack:595,  empty:false},
+  lj:  {angle:160, label:'LJ',    stack:595,  empty:false},
+  mp:  {angle:120, label:'MP',    stack:57,   empty:false},
+  utg1:{angle:80,  label:'UTG+1', stack:0,    empty:true},
+  utg2:{angle:40,  label:'UTG+2', stack:0,    empty:true},
+};
+
+// ── CANONICAL SEAT DERIVATION ──
+// Real poker action order, cyclic. Physical slots are read in table-clockwise
+// order starting at Hero (increasing angle: hero,utg2,utg1,mp,lj,hj,co,btn,sb).
+// Given Hero's canonical position, walk forward through ACTION_ORDER once per
+// physical slot in that order. This derives who canonically sits where instead
+// of hardcoding it — works for any Hero position, not just BB.
+const ACTION_ORDER=['UTG','UTG+1','UTG+2','LJ','HJ','CO','BTN','SB','BB'];
+const CLOCKWISE_SLOTS=['hero','utg2','utg1','mp','lj','hj','co','btn','sb'];
+function deriveSeatCanon(heroPos){
+  const startIdx=ACTION_ORDER.indexOf(heroPos||'BB');
+  const map={};
+  CLOCKWISE_SLOTS.forEach((slotKey,i)=>{map[slotKey]=ACTION_ORDER[(startIdx+i)%9];});
+  return map;
+}
+
+// ── CARDS ──
+const SC={h:'#d42020',d:'#1a5fd4',c:'#1a8c1a',s:'#111','?':'#000'};
+const SS={h:'♥',d:'♦',c:'♣',s:'♠','?':'?'};
+function pc(code){return{rank:code.slice(0,-1).toUpperCase(),suit:code.slice(-1).toLowerCase()};}
+function cFaceUp(x,y,w,h,code){
+  const{rank,suit}=pc(code),col=SC[suit],sym=SS[suit];
+  const rFs=w*0.38,symFs=w*0.65,margin=3.5,qOff=3;
+  const topY=y+margin+rFs*0.85,botY=y+h-margin,symCY=y+h/2+(sym==='?'?qOff:0);
+  return`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#fff" stroke="#ccc" stroke-width="1"/>
+<text x="${x+margin}" y="${topY}" font-size="${rFs}" fill="${col}" font-weight="800" font-family="Arial">${rank}</text>
+<text x="${x+w/2}" y="${symCY}" text-anchor="middle" dominant-baseline="middle" font-size="${symFs}" fill="${col}" font-family="Arial"${sym==='?'?' font-weight="800"':''}>${sym}</text>
+<text x="${x+w-margin}" y="${botY}" font-size="${rFs}" fill="${col}" font-weight="800" font-family="Arial" text-anchor="end">${rank}</text>`;
+}
+function cFaceDown(x,y,w,h){
+  const id=`cb${Math.round(x)}_${Math.round(y)}`;
+  return`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#fff" stroke="#aaa" stroke-width="1"/>
+<clipPath id="${id}"><rect x="${x+2}" y="${y+2}" width="${w-4}" height="${h-4}" rx="3"/></clipPath>
+<rect x="${x+2}" y="${y+2}" width="${w-4}" height="${h-4}" fill="url(#cbp)" clip-path="url(#${id})"/>`;
+}
+function cUnknown(x,y,w,h){
+  return`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#fff" stroke="#c9a84c" stroke-width="1.5"/>
+<text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle" dominant-baseline="middle" font-size="${w*0.68}" fill="#000" font-weight="900" font-family="Arial">?</text>`;
+}
+const HC=['Qd','Th','9d','7s'],BW=43,BH=61,SW=34,SH=49,CG=3;
+function heroRow(cx,ty,cards){
+  const c=cards||HC,tw=4*BW+3*CG;
+  return c.map((cd,i)=>cFaceUp(cx-tw/2+i*(BW+CG),ty,BW,BH,cd)).join('');
+}
+function fdRow(cx,ty,n,cw,ch){
+  const tw=n*cw+(n-1)*CG;
+  return Array.from({length:n},(_,i)=>cFaceDown(cx-tw/2+i*(cw+CG),ty,cw,ch)).join('');
+}
+function revRow(cx,ty,cards,cw,ch){
+  const tw=cards.length*cw+(cards.length-1)*CG;
+  return cards.map((c,i)=>{
+    const x=cx-tw/2+i*(cw+CG);
+    if(c===null) return cFaceDown(x,ty,cw,ch);
+    if(c==='?')  return cUnknown(x,ty,cw,ch);
+    return cFaceUp(x,ty,cw,ch,c);
+  }).join('');
+}
+function boardRow(cx,cy,cards){
+  const tw=5*BW+4*CG;
+  return Array.from({length:5},(_,i)=>{
+    const x=cx-tw/2+i*(BW+CG),ty=cy-BH/2;
+    return i<cards.length?cFaceUp(x,ty,BW,BH,cards[i])
+      :`<rect x="${x}" y="${ty}" width="${BW}" height="${BH}" rx="4" fill="#1a5e32" stroke="#2d8a4e" stroke-width="1" opacity=".4"/>`;
+  }).join('');
+}
+
+// ── CHIPS ──
+function drawPotChips(cx,cy,amt){
+  if(!amt||amt<=0) return'';
+  const denoms=[
+    {val:1000,col:'#d4b800',dark:'#8a7700',tc:'#000'},
+    {val:500, col:'#6a0dad',dark:'#3d0069',tc:'#fff'},
+    {val:100, col:'#1a1a1a',dark:'#000',   tc:'#fff'},
+    {val:25,  col:'#2d7a2d',dark:'#1a4d1a',tc:'#fff'},
+    {val:5,   col:'#c0392b',dark:'#7b1f1a',tc:'#fff'},
+    {val:1,   col:'#dcdcdc',dark:'#999',   tc:'#333'}
+  ];
+  const chips=[];let rem=amt;
+  for(const d of denoms){if(rem>=d.val){const n=Math.floor(rem/d.val);rem-=n*d.val;chips.push({...d,n});}}
+  if(!chips.length) return'';
+  const cr=11,crescentW=7,groupGap=1;
+  const totalW=chips.reduce((s,c,i)=>s+(cr*2)+(c.n>1?(c.n-1)*crescentW:0)+(i<chips.length-1?groupGap:0),0);
+  let out='',drawX=cx-totalW/2;
+  chips.forEach(c=>{
+    const stackExt=(c.n-1)*crescentW,chipCX=drawX+stackExt+cr;
+    for(let i=c.n-1;i>=1;i--){
+      const cx2=chipCX-i*crescentW;
+      out+=`<circle cx="${cx2}" cy="${cy}" r="${cr}" fill="${c.col}" stroke="${c.dark}" stroke-width="1.5"/>`;
+      out+=`<circle cx="${cx2}" cy="${cy}" r="${cr*0.65}" fill="none" stroke="${c.tc}" stroke-width="0.8" opacity="0.35"/>`;
+    }
+    out+=`<circle cx="${chipCX}" cy="${cy}" r="${cr}" fill="${c.col}" stroke="${c.dark}" stroke-width="1.5"/>`;
+    out+=`<circle cx="${chipCX}" cy="${cy}" r="${cr*0.65}" fill="none" stroke="${c.tc}" stroke-width="0.9" opacity="0.5"/>`;
+    out+=`<circle cx="${chipCX}" cy="${cy-3}" r="${cr*0.55}" fill="none" stroke="${c.tc}" stroke-width="0.6" opacity="0.2"/>`;
+    drawX=chipCX+cr+groupGap;
+  });
+  return out;
+}
+
+// ── SIDE-POT BADGE ROW ──
+// Renders 2+ pot badges horizontally, centered, in the gap between the
+// upper seats (CO/HJ/LJ card-bottom ~y196) and the board (top edge ~y237.5).
+// Only used when a slide has a genuine side-pot situation (slide.pots.length>=2);
+// single-pot slides keep the plain "Pot: $X" counter untouched.
+const POT_BADGE_Y=214;
+function renderPotBadges(pots){
+  const padX=10,h=22,gap=8,fs=12;
+  const texts=pots.map(p=>`${p.label}: $${p.amount}`);
+  const widths=texts.map(t=>Math.max(70,t.length*6.5+2*padX));
+  const totalW=widths.reduce((a,b)=>a+b,0)+gap*(pots.length-1);
+  let x=CX-totalW/2;
+  let out='';
+  texts.forEach((t,i)=>{
+    const w=widths[i];
+    out+=`<rect x="${x}" y="${POT_BADGE_Y-h/2}" width="${w}" height="${h}" rx="${h/2}" fill="#111" opacity=".85"/>
+<text x="${x+w/2}" y="${POT_BADGE_Y+4}" text-anchor="middle" font-size="${fs}" fill="#fff" font-weight="700" font-family="Arial">${t}</text>`;
+    x+=w+gap;
+  });
+  return out;
+}
+function drawPlayerChips(cx,cy,amt){
+  if(!amt||amt<=0) return'';
+  const denoms=[
+    {val:1000,col:'#d4b800',dark:'#8a7700',tc:'#000'},
+    {val:500, col:'#6a0dad',dark:'#3d0069',tc:'#fff'},
+    {val:100, col:'#1a1a1a',dark:'#000',   tc:'#fff'},
+    {val:25,  col:'#2d7a2d',dark:'#1a4d1a',tc:'#fff'},
+    {val:5,   col:'#c0392b',dark:'#7b1f1a',tc:'#fff'},
+    {val:1,   col:'#dcdcdc',dark:'#999',   tc:'#333'}
+  ];
+  const groups=[];let rem=amt;
+  for(const d of denoms){if(rem>=d.val){const n=Math.floor(rem/d.val);rem-=n*d.val;groups.push({...d,n});}}
+  if(!groups.length) return'';
+  const cr=10,cw=6;
+  const crescents=[];
+  groups.forEach((g,i)=>{const count=i===0?g.n-1:g.n;for(let j=0;j<count;j++) crescents.push(g);});
+  const out=[];
+  out.push(`<text x="${cx}" y="${cy-cr-8}" text-anchor="middle" font-size="14" fill="#fff" font-weight="700" font-family="Arial">$${amt}</text>`);
+  crescents.slice().reverse().forEach((g,ri)=>{
+    const pos=crescents.length-ri,x=cx-pos*cw;
+    out.push(`<circle cx="${x}" cy="${cy}" r="${cr}" fill="${g.col}" stroke="${g.dark}" stroke-width="1.5"/>`);
+    out.push(`<circle cx="${x}" cy="${cy}" r="${cr*0.65}" fill="none" stroke="${g.tc}" stroke-width="0.8" opacity="0.3"/>`);
+  });
+  const fg=groups[0];
+  out.push(`<circle cx="${cx}" cy="${cy}" r="${cr}" fill="${fg.col}" stroke="${fg.dark}" stroke-width="1.5"/>`);
+  out.push(`<circle cx="${cx}" cy="${cy}" r="${cr*0.65}" fill="none" stroke="${fg.tc}" stroke-width="0.9" opacity="0.5"/>`);
+  out.push(`<circle cx="${cx}" cy="${cy-3}" r="${cr*0.55}" fill="none" stroke="${fg.tc}" stroke-width="0.6" opacity="0.2"/>`);
+  return out.join('');
+}
+
+// ── NAMEPLATE ──
+function isSeatEmpty(key,seatDef,slide){
+  if(slide&&slide.activeSeats&&slide.activeSeats.includes(key)) return false;
+  const forcedEmpty=slide&&slide.emptySeats&&slide.emptySeats.includes(key);
+  return seatDef.empty||forcedEmpty;
+}
+function npLabel(key,seatDef,slide){
+  const heroPos=(slide&&slide.heroPos)||seatDef.heroPos||'BB';
+  if(key==='hero'){
+    if(['BB','SB','BTN'].includes(heroPos)) return'Hero';
+    return`Hero-${heroPos}`;
+  }
+  const canon=deriveSeatCanon(heroPos)[key];
+  if(isSeatEmpty(key,seatDef,slide)) return canon;
+  if(slide&&slide.seatLabels&&slide.seatLabels[key]) return slide.seatLabels[key];
+  return canon;
+}
+function drawNP(cx,cy,lbl,stack,folded,badge,allIn,empty,isTopHalf){
+  if(empty){
+    const w=70,h=28,x=cx-w/2,y=cy-h/2;
+    return`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#1a1a2e" stroke="#333" stroke-width="1" opacity=".5"/>
+<text x="${cx}" y="${y+17}" text-anchor="middle" font-size="11" fill="#444" font-family="Arial">${lbl}</text>`;
+  }
+  const op=folded?.3:1;
+  const w=82,h=36,x=cx-w/2,y=cy-h/2;
+  const bg=allIn?'#2a1500':'#0d1a0d';
+  let bc='#444';
+  if(badge==='All-In') bc='#c9a84c';
+  else if(badge==='Fold') bc='#2a2a2a';
+  else if(badge==='Wins') bc='#1a6a1a';
+  else if(badge==='?') bc='#c9a84c';
+  else if(badge) bc='#2a2a2a';
+  let out=`<g opacity="${op}">
+<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="${bg}" stroke="#c9a84c" stroke-width="1.3"/>
+<text x="${cx}" y="${y+14}" text-anchor="middle" font-size="13" fill="#fff" font-weight="700" font-family="Arial">${lbl}</text>
+<text x="${cx}" y="${y+30}" text-anchor="middle" font-size="12" fill="#c9a84c" font-weight="700" font-family="Arial">$${stack}</text>`;
+  if(badge){
+    const bw=Math.max(52,badge.length*7+16);
+    const bx=(x+w-8)+bw/2;
+    const by=isTopHalf?y+5:y+h-5;
+    const badgeBorder=(badge==='All-In')?'#e74c3c':'#c9a84c';
+    const badgeBorderW=(badge==='All-In')?2:1;
+    out+=`<rect x="${bx-bw/2}" y="${by-10}" width="${bw}" height="19" rx="9.5" fill="${bc}" stroke="${badgeBorder}" stroke-width="${badgeBorderW}" opacity=".93"/>
+<text x="${bx}" y="${by+4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="800" font-family="Arial">${badge}</text>`;
+  }
+  out+=`</g>`;
+  return out;
+}
+
+// ── POSITION BUTTONS ──
+// Button angles are derived per-slide from canonical position (see
+// deriveSeatCanon/findSlotAngle) — never hardcoded, since Hero isn't always BB.
+function findSlotAngle(canonPos,heroPos){
+  const map=deriveSeatCanon(heroPos);
+  for(const k in map){ if(map[k]===canonPos) return SEATS[k].angle; }
+  return 0;
+}
+function posBtns(btnDeg,sbDeg,bbDeg){
+  function drawBtn(deg,lbl,col,offsetX){
+    const r=deg*Math.PI/180,bx=CX-RX*Math.sin(r)*0.88+(offsetX||0),by=CY+RY*Math.cos(r)*0.88;
+    return`<circle cx="${bx}" cy="${by}" r="11" fill="${col}" stroke="#fff" stroke-width="1.2"/>
+<text x="${bx}" y="${by+4}" text-anchor="middle" font-size="9" fill="#fff" font-weight="900" font-family="Arial">${lbl}</text>`;
+  }
+  // +23px nudge is a Hand-2-specific hack (clears hero's 9♦ card) — only valid
+  // when BB happens to sit at Hero's own seat (angle 0). Never apply it otherwise.
+  const bbOffset=(bbDeg===0)?23:0;
+  return drawBtn(btnDeg,'D','#333')+drawBtn(sbDeg,'SB','#1a7a1a')+drawBtn(bbDeg,'BB','#1a3acc',bbOffset);
+}
+
+// ── SEAT RENDER ──
+function renderSeat(key,seatDef,ps,slide){
+  if(!ps) return'';
+  const{x:sx,y:sy}=seatPos(seatDef.angle);
+  const ang=seatDef.angle,folded=ps.folded,badge=ps.badge,allIn=ps.allIn;
+  const empty=isSeatEmpty(key,seatDef,slide);
+  const lbl=npLabel(key,seatDef,slide),stack=ps.stack;
+  const cw=(key==='hero')?BW:SW,ch=(key==='hero')?BH:SH;
+  const isTopHalf=sy<CY-20;
+  let npCX,npCY,cardCX,cardTY;
+  if(ang===0){cardCX=sx;cardTY=sy-ch+13;npCX=sx;npCY=cardTY+ch+26;}
+  else if(isTopHalf){cardCX=sx;cardTY=sy-ch/2;npCX=sx;npCY=cardTY-26;}
+  else{cardCX=sx;cardTY=sy-ch/2;npCX=sx;npCY=cardTY+ch+22;}
+  let out='';
+  if(empty){out+=drawNP(npCX,npCY,lbl,0,false,null,false,true,isTopHalf);return out;}
+  const revealed=ps.revealedCards,op=folded?.3:1;
+  out+=`<g opacity="${op}">`;
+  if(key==='hero') out+=heroRow(cardCX,cardTY,ps.heroCards);
+  else if(revealed) out+=revRow(cardCX,cardTY,revealed,BW,BH);
+  else out+=fdRow(cardCX,cardTY,4,SW,SH);
+  out+=`</g>`;
+  out+=drawNP(npCX,npCY,lbl,stack,folded,badge,allIn,false,isTopHalf);
+  const chipAmt=ps.chipBet||0;
+  if(chipAmt>0&&!folded){
+    const cr=ang*Math.PI/180,chipDist=0.62;
+    const chipX=CX-ORAX*chipDist*Math.sin(cr),chipY=CY+ORAY*chipDist*Math.cos(cr);
+    out+=drawPlayerChips(chipX,chipY,chipAmt);
+  }
+  return out;
+}
+
+// ── SLIDES DATA ──
+const slides=[
+{type:'title',time:0,
+  heading:'PLO Hand Reading',
+  subtitle:'PLO Battle Plan Series · Episode 6',
+  host:'Ryan "Terp Himself" Terpstra',
+  bottomText:'',
+},
+{type:'concept',time:64,
+  heading:'Why Hand Reading Matters',
+  items:[
+    {text:'Most players focus on their own hand\'s strength, not what they\'re up against'},
+    {text:'Common mistake: realizing after the fact you were third in equity'},
+    {text:'Dead flush outs, shared straight draws, opponent held an overpair',sub:true},
+    {text:'Hand reading lets you see trouble coming and avoid it entirely'},
+    {text:'At low/mid-stakes live PLO, players follow very predictable patterns'},
+    {text:'The more money that goes in, the more defined ranges become',sub:true},
+  ],
+  bottomText:'',
+},
+{type:'concept',time:433,
+  heading:'Live PLO Adjustments',
+  items:[
+    {text:'Online players multi-table thousands of hands vs balanced ranges'},
+    {text:'Live PLO is full-ring, multi-way — you\'re "up against it" far more often'},
+    {text:'Wide ranges + more players = drawing dead more frequently',sub:true},
+    {text:'"You need 30% equity, just get it in" — valid online, often wrong live'},
+    {text:'Are your outs actually clean? Are you scooping or chopping?',sub:true},
+    {text:'Slight over-folding can smooth variance and protect your hourly'},
+  ],
+  bottomText:'',
+},
+{type:'hand-concept',time:515,
+  heading:'Observed Hand · Discord Listener',shortLabel:'Discord Hand',
+  content:`<div class="pre-label">Format</div>
+<div class="pre-action">5-Card PLO · 6-Max · Online</div>
+<div class="pre-label">Board</div>
+<div class="pre-action"><span class="card-inline u">J?</span><span class="card-inline d">T♦</span><span class="card-inline u">2?</span> — rainbow</div>
+<div class="pre-label">Listener's Hand</div>
+<div class="pre-action"><span class="card-inline d">A♦</span><span class="card-inline u">A?</span><span class="card-inline u">Q?</span><span class="card-inline d">6♦</span><span class="card-inline u">7?</span></div>
+<div class="result-row"><strong>Listener gets led into.</strong> Villain's leading range here is wrap-heavy: J10+, KQ9, KQ8, Q9. Run against that range, the listener's hand comes out to ~30% equity. Heads-up, that's an easy fold.</div>`,
+  flag:'No bet sizes or stakes were stated for this hand — omitted rather than estimated. Three of the listener\'s five card suits were unstated — shown as "?". The board\'s three suits were also unstated, but "backdoor NUT flush draw" on a rainbow board is only possible if exactly one flop card is a diamond (Listener holds A♦/6♦) — that one card is a deduced fact, not a guess. WHICH of the three flop cards carries it was never stated, so it was assigned randomly (landed on the Ten) rather than picked for convenience; the other two stay unknown-suit.',
+  bottomText:'',
+},
+{type:'concept',time:710,
+  heading:'Supplemental Resources',
+  items:[
+    {text:'Podcast #25 – "Counting Clean"'},
+    {text:'Calculate outs that are actually live — not just memorizing wrap equity %',sub:true},
+    {text:'Accounts for dead outs, non-nut outs, and shared/free-rolled outs',sub:true},
+    {text:'Podcast #54 – "When It\'s Just Not Worth It"'},
+    {text:'Deep dive on folding spots in PLO — complements today\'s hand reading focus',sub:true},
+  ],
+  insight:'Contact Terp on the forums or Discord (@TerpHimself) · Instagram: @TerpPoker',
+  bottomText:'',
+},
+{type:'hand',time:842,
+  handLabel:'HAND 1',location:'Horseshoe Chicago',heroPos:'CO',seatLabels:{hj:'EP',btn:'MP'},emptySeats:['lj','co','sb'],activeSeats:['utg1','utg2'],
+  dec:'HERO DECISION: CALL, 3-BET, OR FOLD',
+  board:[],pot:33,potSwept:0,
+  bottomText:'EP (loose, ~$3,000 stack) opens to $15, MP calls $15. Call, 3-bet, or fold?',
+  flag:'BB\'s stack was never stated by the host and BB has no material impact on the hand (folds preflop without comment) — assigned an assumed $500 (100bb-equivalent for this game), minus the $2 blind posted.',
+  players:{
+    hero:{stack:700, folded:false,badge:'?',   allIn:false,chipBet:0,heroCards:['Qc','Js','9c','2s']},
+    utg2:{stack:450, folded:false,badge:null,  allIn:false,chipBet:0},
+    utg1:{stack:115, folded:false,badge:null,  allIn:false,chipBet:1},
+    btn: {stack:485, folded:false,badge:'Call',allIn:false,chipBet:15},
+    hj:  {stack:2985,folded:false,badge:'Raise',allIn:false,chipBet:15},
+    mp:  {stack:498, folded:false,badge:null,  allIn:false,chipBet:2},
+    lj:  {stack:0,   folded:false,badge:null,  allIn:false,chipBet:0},
+    co:  {stack:0,   folded:false,badge:null,  allIn:false,chipBet:0},
+    sb:  {stack:0,   folded:false,badge:null,  allIn:false,chipBet:0},
+  },
+  boxes:[{street:'PRE-FLOP',lines:[
+    {pos:'EP',act:'Opens $15'},{pos:'MP',act:'Calls $15'},
+    {pos:'Hero',act:'?',hero:true},
+  ]}],
+},
+{type:'hand',time:1000,
+  handLabel:'HAND 1',location:'Horseshoe Chicago',heroPos:'CO',seatLabels:{hj:'EP',btn:'MP'},emptySeats:['lj','co','sb'],activeSeats:['utg1','utg2'],
+  dec:'HERO DECISION: CALL, RAISE, OR FOLD',
+  board:['Td','8c','6d'],pot:167,potSwept:77,
+  bottomText:'Hero flops a wrap (front-door diamond draw against him). SB checks, EP bets $45, MP calls. Call, raise, or fold?',
+  players:{
+    hero:{stack:685, folded:false,badge:'?',    allIn:false,chipBet:0,heroCards:['Qc','Js','9c','2s']},
+    utg2:{stack:435, folded:false,badge:null,   allIn:false,chipBet:0},
+    utg1:{stack:100, folded:false,badge:'Check',allIn:false,chipBet:0},
+    btn: {stack:440, folded:false,badge:'Call', allIn:false,chipBet:45},
+    hj:  {stack:2940,folded:false,badge:'Bet',  allIn:false,chipBet:45},
+    mp:  {stack:498, folded:true, badge:null,   allIn:false,chipBet:0},
+    lj:  {stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    co:  {stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    sb:  {stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'EP',act:'Opens $15'},{pos:'MP',act:'Calls $15'},
+      {pos:'Hero',act:'Calls $15'},{pos:'BTN',act:'Calls $15'},{pos:'SB',act:'Calls $15'},
+      {pos:'BB',act:'Folds'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'EP',act:'Bets $45'},{pos:'MP',act:'Calls $45'},
+      {pos:'Hero',act:'?',hero:true},
+    ]},
+  ],
+},
+{type:'hand',time:1037,
+  handLabel:'HAND 1',location:'Horseshoe Chicago',heroPos:'CO',seatLabels:{hj:'EP',btn:'MP'},emptySeats:['lj','co','sb'],activeSeats:['utg1','utg2'],
+  dec:'HERO DECISION: CALL OR FOLD',
+  board:['Td','8c','6d'],pot:412,potSwept:77,
+  bottomText:"SB jams all-in for $100. EP calls, MP folds. Jam reads as current nuts (9-7) or a strong diamond+straight combo. Call or fold?",
+  players:{
+    hero:{stack:640, folded:false,badge:'?',     allIn:false,chipBet:45,heroCards:['Qc','Js','9c','2s']},
+    utg2:{stack:390, folded:false,badge:'Call',  allIn:false,chipBet:45},
+    utg1:{stack:0,   folded:false,badge:'All-In',allIn:true, chipBet:100},
+    btn: {stack:440, folded:true, badge:'Fold',  allIn:false,chipBet:0},
+    hj:  {stack:2885,folded:false,badge:'Call',  allIn:false,chipBet:100},
+    mp:  {stack:498, folded:true, badge:null,    allIn:false,chipBet:0},
+    lj:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    co:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    sb:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'EP',act:'Opens $15'},{pos:'MP',act:'Calls $15'},
+      {pos:'Hero',act:'Calls $15'},{pos:'BTN',act:'Calls $15'},{pos:'SB',act:'Calls $15'},
+      {pos:'BB',act:'Folds'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'EP',act:'Bets $45'},{pos:'MP',act:'Calls $45'},
+      {pos:'Hero',act:'Calls $45'},{pos:'BTN',act:'Calls $45'},
+      {pos:'SB',act:'All-In $100'},{pos:'EP',act:'Calls $100'},{pos:'MP',act:'Folds'},
+      {pos:'Hero',act:'?',hero:true},
+    ]},
+  ],
+},
+{type:'hand',time:1050,
+  handLabel:'HAND 1',location:'Horseshoe Chicago',heroPos:'CO',seatLabels:{hj:'EP',btn:'MP'},emptySeats:['lj','co','sb'],activeSeats:['utg1','utg2'],
+  dec:'HERO DECISION: CALL, RAISE, OR FOLD',
+  board:['Td','8c','6d'],pot:1122,potSwept:77,
+  pots:[{label:'Main Pot',amount:522},{label:'Side Pot',amount:600}],
+  bottomText:"BTN re-shoves for $400, EP calls again. BTN's shove reads as a naked nut flush draw — too much money out there to fold. Call, raise, or fold?",
+  flag:'Main/Side pot amounts are computed from the confirmed bet sequence: SB all-in for $100 total, BTN all-in for $400 total, EP calling in full, Hero\'s call pending at this slide. Main Pot ($522) = everyone\'s contribution up to SB\'s $100 cap, including BB\'s dead $2 blind. Side Pot ($600) = EP + BTN\'s contributions between $100 and $400 (Hero\'s matching $300 isn\'t in yet since this is Hero\'s decision point).',
+  players:{
+    hero:{stack:585, folded:false,badge:'?',     allIn:false,chipBet:100,heroCards:['Qc','Js','9c','2s']},
+    utg2:{stack:0,   folded:false,badge:'All-In',allIn:true, chipBet:400},
+    utg1:{stack:0,   folded:false,badge:'All-In',allIn:true, chipBet:100},
+    btn: {stack:440, folded:true, badge:null,    allIn:false,chipBet:0},
+    hj:  {stack:2585,folded:false,badge:'Call',  allIn:false,chipBet:400},
+    mp:  {stack:498, folded:true, badge:null,    allIn:false,chipBet:0},
+    lj:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    co:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    sb:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'EP',act:'Opens $15'},{pos:'MP',act:'Calls $15'},
+      {pos:'Hero',act:'Calls $15'},{pos:'BTN',act:'Calls $15'},{pos:'SB',act:'Calls $15'},
+      {pos:'BB',act:'Folds'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'EP',act:'Bets $45'},{pos:'MP',act:'Calls $45'},
+      {pos:'Hero',act:'Calls $45'},{pos:'BTN',act:'Calls $45'},
+      {pos:'SB',act:'All-In $100'},{pos:'EP',act:'Calls $100'},{pos:'MP',act:'Folds'},
+      {pos:'Hero',act:'Calls $100'},{pos:'BTN',act:'All-In $400'},{pos:'EP',act:'Calls $400'},
+      {pos:'Hero',act:'?',hero:true},
+    ]},
+  ],
+},
+{type:'concept',time:1065,
+  heading:'Why This Is a Fold, Not Just Math',
+  items:[
+    {text:'Listener\'s own read: a backdoor club draw, very multi-way — planned to see a cheap turn or stack off against dominated hands'},
+    {text:'Terp\'s reframe: this isn\'t a pot-odds problem, it\'s a hand-reading problem'},
+    {text:'The wrap isn\'t clean — it\'s a 3-card wrap on a two-tone board, so a chunk of the outs are diamonds'},
+    {text:'Hero blocks zero diamonds (holds clubs and spades) — none of that danger is removed by his own hand',sub:true},
+    {text:'The more action that goes in, the more clearly opponents\' ranges get defined'},
+  ],
+  bottomText:'',
+},
+{type:'concept',time:1195,
+  heading:'Reading the First Round',
+  items:[
+    {text:'This board plays differently than a pure wrap board — 9-7 is already a made straight out there'},
+    {text:'EP leading into 4 players, even playing badly, likely has something — no bluffs in a range that bets into a crowd like that'},
+    {text:'Could be anywhere from a medium made hand up to the current nuts (9-7)',sub:true},
+    {text:'MP and BTN just calling (not raising) reads as capped — good enough to continue, not strong enough to isolate'},
+  ],
+  bottomText:'',
+},
+{type:'concept',time:1354,
+  heading:'SB\'s Shove — and EP\'s Tell',
+  items:[
+    {text:'SB check-jams all-in for $100 — with three dead-money callers already in, that\'s a great price regardless of hand strength'},
+    {text:'Read: current nuts (9-7) or a big combo draw (diamond + straight) — a hand that\'s never folding either way',sub:true},
+    {text:'EP just calls the shove instead of re-raising to isolate — that\'s the tell'},
+    {text:'A hand built for value usually wants to thin the field, so EP is likely drawing too, not holding the stone nuts',sub:true},
+    {text:'MP folds after already putting in $45 — another live card gone from the deck'},
+  ],
+  bottomText:'',
+},
+{type:'concept',time:1789,
+  heading:'The Verdict — and BTN\'s Shove',
+  items:[
+    {text:'This is the first spot Terp advocates folding — pot odds alone say call, but the range read says otherwise'},
+    {text:'SB\'s likely holding and EP\'s drawing range both eat into outs Hero actually needs — real risk of chopping, or getting free-rolled even on a "good" card'},
+    {text:'BTN re-shoves after just flatting the first bet — reads as a naked nut-flush-draw jam ("too much money out there, can\'t fold anyway")'},
+    {text:'EP calls again rather than re-raising — same tell as before: still drawing, not the nuts',sub:true},
+    {text:'Conclusion: mathematically close, but too many live opponent ranges attacking the same outs — fold'},
+  ],
+  bottomText:'',
+},
+{type:'hand',time:2030,
+  handLabel:'HAND 1',location:'Horseshoe Chicago',heroPos:'CO',seatLabels:{hj:'EP',btn:'MP'},emptySeats:['lj','co','sb'],activeSeats:['utg1','utg2'],
+  dec:'TURN CHECKS THROUGH',
+  board:['Td','8c','6d','?d'],pot:1422,potSwept:1422,
+  bottomText:'EP checks, and it\'s checked through to the river.',
+  flag:'Turn card rank was not stated by the host, only that it was a diamond — rank shown as "?" rather than guessed.',
+  players:{
+    hero:{stack:285, folded:false,badge:'Check',allIn:false,chipBet:0,heroCards:['Qc','Js','9c','2s']},
+    utg2:{stack:0,   folded:false,badge:'All-In',allIn:true, chipBet:0},
+    utg1:{stack:0,   folded:false,badge:'All-In',allIn:true, chipBet:0},
+    btn: {stack:440, folded:true, badge:null,    allIn:false,chipBet:0},
+    hj:  {stack:2585,folded:false,badge:'Check', allIn:false,chipBet:0},
+    mp:  {stack:498, folded:true, badge:null,    allIn:false,chipBet:0},
+    lj:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    co:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    sb:  {stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'EP',act:'Opens $15'},{pos:'MP',act:'Calls $15'},
+      {pos:'Hero',act:'Calls $15'},{pos:'BTN',act:'Calls $15'},{pos:'SB',act:'Calls $15'},
+      {pos:'BB',act:'Folds'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'EP',act:'Bets $45'},{pos:'MP',act:'Calls $45'},
+      {pos:'Hero',act:'Calls $45'},{pos:'BTN',act:'Calls $45'},
+      {pos:'SB',act:'All-In $100'},{pos:'EP',act:'Calls $100'},{pos:'MP',act:'Folds'},
+      {pos:'Hero',act:'Calls $100'},{pos:'BTN',act:'All-In $400'},{pos:'EP',act:'Calls $400'},
+      {pos:'Hero',act:'Calls $400'},
+    ]},
+    {street:'TURN',lines:[
+      {pos:'EP',act:'Checks'},{pos:'Hero',act:'Checks',hero:true},
+    ]},
+  ],
+},
+{type:'hand',time:2050,
+  handLabel:'HAND 1',location:'Horseshoe Chicago',heroPos:'CO',seatLabels:{hj:'EP',btn:'MP'},emptySeats:['lj','co','sb'],activeSeats:['utg1','utg2'],
+  dec:'SHOWDOWN',
+  board:['Td','8c','6d','?d','9?'],pot:1422,potSwept:1422,
+  pots:[{label:'Main Pot',amount:522},{label:'Side Pot',amount:900}],
+  bottomText:'River checks through between EP and Hero. BTN\'s nut flush, completed when the diamond hit the turn, scoops the entire pot; EP and Hero both lose with straights.',
+  flag:'EP\'s Jack was announced with no suit stated; the host also never stated suits for EP\'s Queen, 8, or 6, or for the river card — all four render rank-only with unknown suit. Main/Side amounts are computed from the confirmed bet sequence, not host-stated figures. Stacks stay at their pre-showdown values — winnings are not added back into a stack number; the chips stay represented in the pot badges/center, matching how this file already treats every other all-in-and-win case.',
+  players:{
+    hero:{stack:285, folded:false,badge:'Loses',allIn:false,chipBet:0,heroCards:['Qc','Js','9c','2s']},
+    utg2:{stack:0,   folded:false,badge:'Wins', allIn:true, chipBet:0,revealedCards:['Ad','7d','5s','2h']},
+    utg1:{stack:0,   folded:false,badge:'Mucks',allIn:true, chipBet:0},
+    btn: {stack:440, folded:true, badge:null,   allIn:false,chipBet:0},
+    hj:  {stack:2585,folded:false,badge:'Loses',allIn:false,chipBet:0,revealedCards:['Q?','J?','8?','6?']},
+    mp:  {stack:498, folded:true, badge:null,   allIn:false,chipBet:0},
+    lj:  {stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    co:  {stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    sb:  {stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'EP',act:'Opens $15'},{pos:'MP',act:'Calls $15'},
+      {pos:'Hero',act:'Calls $15'},{pos:'BTN',act:'Calls $15'},{pos:'SB',act:'Calls $15'},
+      {pos:'BB',act:'Folds'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'EP',act:'Bets $45'},{pos:'MP',act:'Calls $45'},
+      {pos:'Hero',act:'Calls $45'},{pos:'BTN',act:'Calls $45'},
+      {pos:'SB',act:'All-In $100'},{pos:'EP',act:'Calls $100'},{pos:'MP',act:'Folds'},
+      {pos:'Hero',act:'Calls $100'},{pos:'BTN',act:'All-In $400'},{pos:'EP',act:'Calls $400'},
+      {pos:'Hero',act:'Calls $400'},
+    ]},
+    {street:'TURN',lines:[{pos:'EP',act:'Checks'},{pos:'Hero',act:'Checks'}]},
+    {street:'RIVER',lines:[{pos:'EP',act:'Checks'},{pos:'Hero',act:'Checks'}]},
+    {street:'SHOWDOWN',lines:[
+      {pos:'BTN', act:'A♦7♦5♠2♥ — Nut flush (diamond turn completed it), Wins'},
+      {pos:'EP',  act:'Q-J-8-6 (straight, suits unstated) — loses to flush'},
+      {pos:'Hero',act:'Q♣J♠9♣2♠ — Straight, loses to flush',hero:true},
+      {pos:'SB',  act:'Mucks'},
+    ]},
+  ],
+},
+{type:'concept',time:2221,
+  heading:'Counting Clean Outs',
+  items:[
+    {text:'A "9-card wrap" is not always 9 clean outs'},
+    {text:'Remove outs that are blocked by opponent\'s likely holdings'},
+    {text:'If SB has 9-7, you need both those cards — they\'re gone',sub:true},
+    {text:'Are your nut outs free-rolling you or chopping?'},
+    {text:'If EP also has QJ, hitting the straight just chops — AND EP can free-roll to a full house',sub:true},
+    {text:'Backdoor draws are rarely a significant equity factor'},
+    {text:'Ask: "If I hit my best out, do I scoop or chop?"'},
+  ],
+  bottomText:'',
+},
+{type:'hand-concept',time:2459,
+  heading:'Observed Hand · Gunlight Casino',location:'Gunlight Casino',
+  content:`<div class="pre-label">Board</div>
+<div class="pre-action"><span class="card-inline s">J♠</span><span class="card-inline d">9♦</span><span class="card-inline d">3♦</span> — escalating action, two players blast off</div>
+<div class="pre-label">Experienced Player's Hand</div>
+<div class="pre-action"><span class="card-inline d">J♦</span><span class="card-inline h">T♥</span><span class="card-inline d">8♦</span><span class="card-inline c">4♣</span> · Small diamond draw (to the 8) · Top pair · Open-ended straight draw</div>
+<div class="result-row"><strong>Player tanked and folded.</strong> Showdown: one player had a set, other had straight draw + nut flush draw. Flush draw to the 8 = worthless. Pair = worthless. All he had was an open-ender.</div>`,
+  insight:'Good fold, but should have been easy, not a tank.',
+  bottomText:'',
+},
+{type:'hand-concept',time:2734,
+  heading:'Observed Hand · The $75 Donation',shortLabel:'$75 River Donation',
+  content:`<div class="pre-label">Board</div>
+<div class="pre-action"><span class="card-inline d">A♦</span><span class="card-inline h">8♥</span><span class="card-inline h">7♥</span> → <span class="card-inline c">5♣</span> (checks through) → <span class="card-inline s">9♠</span></div>
+<div class="pre-label">Hero's Hand</div>
+<div class="pre-action"><span class="card-inline u">6?</span><span class="card-inline u">6?</span><span class="card-inline u">5?</span><span class="card-inline u">?</span> — bottom straight by the river</div>
+<div class="pre-label">The Spot</div>
+<div class="pre-action">Three-way to the river: SB, Hero (in the Hijack), and BTN. A dynamic, draw-heavy flop gets action; the turn goes check-check-check as those draws lose interest.</div>
+<div class="result-row"><strong>River, SB leads.</strong> Hero calls, BTN jams, SB calls off too. Hero donates $75 getting to showdown with a straight that was already beat.</div>`,
+  flag:'Hero\'s hand: only "six six five" was ever stated (confirmed via a second, later reference to "six five" during the hand-reading recap) — the 4th card\'s rank and all four suits were never given, shown as unknown rather than guessed. Other bet sizes on this hand (preflop/flop/turn, and the exact river bet/jam amounts) were not stated by the host and are omitted rather than guessed — only the $75 figure was given directly. The host says "small blind" when introducing the three-way, but says "big blind" twice during the river action narration; following the task\'s resolved reading, this is written as SB throughout. Replaces three earlier full-table slides for this same hand, which had required guessing several unstated numbers (pot size, bet size, Hero\'s exact card suits) — too little confirmed info to justify the full table.',
+  bottomText:'',
+},
+{type:'concept',time:3131,
+  heading:'Using Hand Reading Offensively',
+  items:[
+    {text:'Hand reading isn\'t only about avoiding bad spots'},
+    {text:'It can be used to create bluffing opportunities and extract value'},
+    {text:'When you know what opponents hold, you know what they can\'t call'},
+    {text:'If everyone is capped at draws, a brick river is a great bluffing spot',sub:true},
+    {text:'Representing believable hands is easier when you\'ve tracked the action'},
+    {text:'A check-call line from up front can look like a slow-played set',sub:true},
+  ],
+  bottomText:'',
+},
+{type:'hand',time:3167,seatLabels:{mp:'MP'},
+  dec:'HERO DECISION: COMPLETE, RAISE, OR FOLD',
+  board:[],pot:27,potSwept:0,
+  bottomText:'UTG, HJ, CO, and BTN all limp to $5. SB completes $5. Options: complete to $5, raise, or fold.',
+  players:{
+    hero:{stack:1300,folded:false,badge:'?',      allIn:false,chipBet:2},
+    sb:  {stack:595, folded:false,badge:'Complete',allIn:false,chipBet:5},
+    btn: {stack:595, folded:false,badge:'Limp',   allIn:false,chipBet:5},
+    co:  {stack:595, folded:false,badge:'Limp',   allIn:false,chipBet:5},
+    hj:  {stack:595, folded:false,badge:'Limp',   allIn:false,chipBet:5},
+    lj:  {stack:595, folded:true, badge:'Fold',   allIn:false,chipBet:0},
+    mp:  {stack:57,  folded:false,badge:'Limp',   allIn:false,chipBet:5},
+    utg1:{stack:0,   folded:false,badge:null,     allIn:false,chipBet:0},
+    utg2:{stack:0,   folded:false,badge:null,     allIn:false,chipBet:0},
+  },
+  boxes:[{street:'PRE-FLOP',lines:[
+    {pos:'MP',act:'Limps $5'},{pos:'LJ',act:'Folds'},
+    {pos:'HJ',act:'Limps $5'},{pos:'CO',act:'Limps $5'},
+    {pos:'BTN',act:'Limps $5'},{pos:'SB',act:'Completes $5'},
+    {pos:'Hero',act:'?',hero:true},
+  ]}],
+},
+{type:'hand',time:3219,seatLabels:{mp:'MP'},
+  dec:'HERO DECISION: CHECK OR BET',
+  board:['9h','3h','7c'],pot:30,potSwept:30,
+  bottomText:'Hero flops top two pair (9s and 7s). Front-door heart draw on board. No flush draw for Hero.',
+  players:{
+    hero:{stack:1295,folded:false,badge:'?',    allIn:false,chipBet:0},
+    sb:  {stack:590, folded:false,badge:'Check',allIn:false,chipBet:0},
+    btn: {stack:590, folded:false,badge:null,   allIn:false,chipBet:0},
+    co:  {stack:590, folded:false,badge:null,   allIn:false,chipBet:0},
+    hj:  {stack:590, folded:false,badge:null,   allIn:false,chipBet:0},
+    lj:  {stack:595, folded:true, badge:null,   allIn:false,chipBet:0},
+    mp:  {stack:52,  folded:false,badge:null,   allIn:false,chipBet:0},
+    utg1:{stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    utg2:{stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'MP',act:'Limps $5'},{pos:'LJ',act:'Folds'},{pos:'HJ',act:'Limps $5'},
+      {pos:'CO',act:'Limps $5'},{pos:'BTN',act:'Limps $5'},
+      {pos:'SB',act:'Completes $5'},{pos:'Hero',act:'Completes $5'},
+    ]},
+    {street:'FLOP',lines:[{pos:'SB',act:'Checks'},{pos:'Hero',act:'?',hero:true}]},
+  ],
+},
+{type:'hand',time:3281,seatLabels:{mp:'MP'},
+  dec:'HERO DECISION: CALL OR FOLD',
+  board:['9h','3h','7c'],pot:280,potSwept:30,
+  bottomText:"MP's all-in for $55 does not reopen betting — needs $60 to reopen. HJ and CO smooth call, SB calls. Multiple smooth calls = everyone on draws? Hero can call or fold.",
+  players:{
+    hero:{stack:1265,folded:false,badge:'Bet',   allIn:false,chipBet:30},
+    sb:  {stack:535, folded:false,badge:'Call',  allIn:false,chipBet:55},
+    btn: {stack:535, folded:false,badge:'Call',  allIn:false,chipBet:55},
+    co:  {stack:535, folded:false,badge:'Call',  allIn:false,chipBet:55},
+    hj:  {stack:535, folded:false,badge:'Call',  allIn:false,chipBet:55},
+    lj:  {stack:595, folded:true, badge:null,    allIn:false,chipBet:0},
+    mp:  {stack:0,   folded:false,badge:'All-In',allIn:true, chipBet:55},
+    utg1:{stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+    utg2:{stack:0,   folded:false,badge:null,    allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'MP',act:'Limps $5'},{pos:'LJ',act:'Folds'},
+      {pos:'HJ',act:'Limps $5'},{pos:'CO',act:'Limps $5'},
+      {pos:'BTN',act:'Limps $5'},{pos:'SB',act:'Completes $5'},
+      {pos:'Hero',act:'Completes $5'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'Hero',act:'Bets $30'},
+      {pos:'MP',act:'All-In $55'},{pos:'HJ',act:'Calls $55'},
+      {pos:'CO',act:'Calls $55'},{pos:'BTN',act:'Calls $55'},
+      {pos:'SB',act:'Calls $55'},{pos:'Hero',act:'?',hero:true},
+    ]},
+  ],
+},
+{type:'hand',time:3388,seatLabels:{mp:'MP'},
+  dec:'HERO DECISION: CHECK OR BET',
+  board:['9h','3h','7c','Kc'],pot:305,potSwept:305,
+  bottomText:'K♣ brings a backdoor flush draw. SB checks to Hero, who still has players behind. Hero can bet, or check and try to take a free card.',
+  players:{
+    hero:{stack:1210,folded:false,badge:'?',    allIn:false,chipBet:0},
+    sb:  {stack:535, folded:false,badge:'Check',allIn:false,chipBet:0},
+    btn: {stack:535, folded:false,badge:null,   allIn:false,chipBet:0},
+    co:  {stack:535, folded:false,badge:null,   allIn:false,chipBet:0},
+    hj:  {stack:535, folded:false,badge:null,   allIn:false,chipBet:0},
+    lj:  {stack:595, folded:true, badge:null,   allIn:false,chipBet:0},
+    mp:  {stack:0,   folded:false,badge:'All-In',allIn:true,chipBet:0},
+    utg1:{stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    utg2:{stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'MP',act:'Limps $5'},{pos:'LJ',act:'Folds'},{pos:'HJ',act:'Limps $5'},
+      {pos:'CO',act:'Limps $5'},{pos:'BTN',act:'Limps $5'},
+      {pos:'SB',act:'Completes $5'},{pos:'Hero',act:'Completes $5'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'Hero',act:'Bets $30'},
+      {pos:'MP',act:'All-In $55'},{pos:'HJ',act:'Calls $55'},
+      {pos:'CO',act:'Calls $55'},{pos:'BTN',act:'Calls $55'},
+      {pos:'SB',act:'Calls $55'},{pos:'Hero',act:'Calls'},
+    ]},
+    {street:'TURN',lines:[{pos:'SB',act:'Checks'},{pos:'Hero',act:'?',hero:true}]},
+  ],
+},
+{type:'hand',time:3537,seatLabels:{mp:'MP'},
+  dec:'HERO DECISION: CHECK OR BET',
+  board:['9h','3h','7c','Kc','3s'],pot:305,potSwept:305,
+  bottomText:'3♠ pairs the board, bricks both flush draws. Turn checked around — everyone capped at draws. SB checks to Hero. Hero can check or bluff, representing a flopped set.',
+  players:{
+    hero:{stack:1210,folded:false,badge:'?',    allIn:false,chipBet:0},
+    sb:  {stack:535, folded:false,badge:'Check',allIn:false,chipBet:0},
+    btn: {stack:535, folded:false,badge:null,   allIn:false,chipBet:0},
+    co:  {stack:535, folded:false,badge:null,   allIn:false,chipBet:0},
+    hj:  {stack:535, folded:false,badge:null,   allIn:false,chipBet:0},
+    lj:  {stack:595, folded:true, badge:null,   allIn:false,chipBet:0},
+    mp:  {stack:0,   folded:false,badge:'All-In',allIn:true,chipBet:0},
+    utg1:{stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+    utg2:{stack:0,   folded:false,badge:null,   allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'MP',act:'Limps $5'},{pos:'LJ',act:'Folds'},{pos:'HJ',act:'Limps $5'},
+      {pos:'CO',act:'Limps $5'},{pos:'BTN',act:'Limps $5'},
+      {pos:'SB',act:'Completes $5'},{pos:'Hero',act:'Completes $5'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'Hero',act:'Bets $30'},
+      {pos:'MP',act:'All-In $55'},{pos:'HJ',act:'Calls $55'},
+      {pos:'CO',act:'Calls $55'},{pos:'BTN',act:'Calls $55'},
+      {pos:'SB',act:'Calls $55'},{pos:'Hero',act:'Calls'},
+    ]},
+    {street:'TURN',lines:[{pos:'All',act:'Checks around'}]},
+    {street:'RIVER',lines:[{pos:'SB',act:'Checks'},{pos:'Hero',act:'?',hero:true}]},
+  ],
+},
+{type:'hand',time:3724,seatLabels:{mp:'MP'},
+  dec:'SHOWDOWN',
+  board:['9h','3h','7c','Kc','3s'],pot:305,potSwept:305,
+  bottomText:'Hero bets ~$200 (2/3 pot). SB, HJ, CO, BTN all fold showing missed draws. MP (all-in) rolls A♠ A♥ — wins main pot. Hero wins nothing.',
+  players:{
+    hero:{stack:1010,folded:false,badge:'Bet',allIn:false,chipBet:200,revealedCards:['Qd','Th','9d','7s']},
+    sb:  {stack:535, folded:true, badge:'Fold',allIn:false,chipBet:0},
+    btn: {stack:535, folded:true, badge:'Fold',allIn:false,chipBet:0},
+    co:  {stack:535, folded:true, badge:'Fold',allIn:false,chipBet:0},
+    hj:  {stack:535, folded:true, badge:'Fold',allIn:false,chipBet:0},
+    lj:  {stack:595, folded:true, badge:null,  allIn:false,chipBet:0},
+    mp:  {stack:0,   folded:false,badge:'Wins',allIn:true, chipBet:0,revealedCards:['As','Ah','?','?']},
+    utg1:{stack:0,   folded:false,badge:null,  allIn:false,chipBet:0},
+    utg2:{stack:0,   folded:false,badge:null,  allIn:false,chipBet:0},
+  },
+  boxes:[
+    {street:'PRE-FLOP',lines:[
+      {pos:'MP',act:'Limps $5'},{pos:'LJ',act:'Folds'},{pos:'HJ',act:'Limps $5'},
+      {pos:'CO',act:'Limps $5'},{pos:'BTN',act:'Limps $5'},
+      {pos:'SB',act:'Completes $5'},{pos:'Hero',act:'Completes $5'},
+    ]},
+    {street:'FLOP',lines:[
+      {pos:'SB',act:'Checks'},{pos:'Hero',act:'Bets $30'},
+      {pos:'MP',act:'All-In $55'},{pos:'HJ',act:'Calls $55'},
+      {pos:'CO',act:'Calls $55'},{pos:'BTN',act:'Calls $55'},
+      {pos:'SB',act:'Calls $55'},{pos:'Hero',act:'Calls'},
+    ]},
+    {street:'TURN',lines:[{pos:'All',act:'Checks around'}]},
+    {street:'RIVER',lines:[
+      {pos:'SB',act:'Checks'},{pos:'Hero',act:'Bets ~$200'},
+      {pos:'HJ',act:'Folds'},{pos:'CO',act:'Folds'},
+      {pos:'BTN',act:'Folds'},{pos:'SB',act:'Folds'},
+    ]},
+    {street:'SHOWDOWN',lines:[
+      {pos:'MP',  act:'A♠ A♥ ? ? — Wins Main Pot'},
+      {pos:'Hero',act:'Q♦ T♥ 9♦ 7♠ — Bluff (loses)'},
+    ]},
+  ],
+},
+{type:'concept',time:3737,
+  heading:'Hand Reading Framework',
+  items:[
+    {text:'More money in = more defined ranges — use this to narrow holdings'},
+    {text:'Categorize broadly first: draw / medium made / strong made'},
+    {text:'Watch for how players act on each street relative to the board texture',sub:true},
+    {text:'Draws play softly as pots grow — made hands attack'},
+    {text:'Check-call lines = draws or medium strength; raises/jams = strong or bluff',sub:true},
+    {text:'Practice in pots you\'re not in — predict hands, verify at showdown'},
+    {text:'Track scare cards: does action continue or stop when a draw completes?'},
+  ],
+  bottomText:'',
+},
+{type:'title',time:3873,bigTakeaway:true,
+  heading:'Practice Makes Perfect',
+  subtitle:'Hand reading is a skill built by repetition — not a formula',
+  subtitle2:'Watch. Predict. Verify. Adjust.',
+  host:'Forums & Discord: @TerpHimself · Instagram: @TerpPoker',
+  bottomText:'CLP PLO Battle Plan · Episode 6',
+},
+];
+
+// ── STATE ──
+let cur=0;
+let autoMode=false;
+const EPISODE_DURATION=2700; // fallback if audio metadata not loaded
+
+// ── AUDIO ──
+const aud=document.getElementById('aud');
+const tsEl=document.getElementById('ts');
+const playBtn=document.getElementById('play-btn');
+const progressFill=document.getElementById('progress-fill');
+const progressHandle=document.getElementById('progress-handle');
+const progressBar=document.getElementById('progress-wrapper');
+
+function updateProgressBar(){
+  const dur=aud.duration||EPISODE_DURATION;
+  const pct=Math.min((aud.currentTime/dur)*100,100);
+  progressFill.style.width=pct+'%';
+  progressHandle.style.left=pct+'%';
+}
+
+aud.addEventListener('timeupdate',()=>{
+  const t=aud.currentTime;
+  const m=Math.floor(t/60);
+  const s=Math.floor(t%60).toString().padStart(2,'0');
+  tsEl.textContent=`${m}:${s}`;
+  updateProgressBar();
+  if(!autoMode) return;
+  let target=0;
+  for(let i=0;i<slides.length;i++){if(t>=slides[i].time) target=i;}
+  if(target!==cur){cur=target;render(cur);}
+});
+aud.addEventListener('play', ()=>{autoMode=true; playBtn.textContent='⏸ Pause';});
+aud.addEventListener('pause',()=>{autoMode=false;playBtn.textContent='▶ Play';});
+aud.addEventListener('ended',()=>{autoMode=false;playBtn.textContent='▶ Play';});
+
+function togglePlay(){
+  if(aud.paused) aud.play();
+  else aud.pause();
+}
+
+// ── PROGRESS BAR SCRUBBING ──
+let scrubbing=false;
+
+function scrubTo(e){
+  const track=document.getElementById('progress-track');
+  const rect=track.getBoundingClientRect();
+  const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  const dur=aud.duration||EPISODE_DURATION;
+  const targetTime=pct*dur;
+  aud.currentTime=targetTime;
+  let target=0;
+  for(let i=0;i<slides.length;i++){if(targetTime>=slides[i].time) target=i;}
+  if(target!==cur){cur=target;render(cur);}
+  updateProgressBar();
+}
+
+progressBar.addEventListener('mousedown',(e)=>{e.preventDefault();scrubbing=true;document.body.style.userSelect='none';scrubTo(e);});
+document.addEventListener('mousemove',(e)=>{if(scrubbing){e.preventDefault();scrubTo(e);}});
+document.addEventListener('mouseup',()=>{scrubbing=false;document.body.style.userSelect='';});
+
+// Arrow-key scrub (10s) — separate from chapter/slide nav, which stays on the Prev/Next buttons.
+function scrubBy(sec){
+  const dur=aud.duration||EPISODE_DURATION;
+  const targetTime=Math.max(0,Math.min(dur,aud.currentTime+sec));
+  aud.currentTime=targetTime;
+  let target=0;
+  for(let i=0;i<slides.length;i++){if(targetTime>=slides[i].time) target=i;}
+  if(target!==cur){cur=target;render(cur);}
+  updateProgressBar();
+}
+
+// ── PLAYBACK SPEED ──
+// #bottom-box is only elevated above the progress bar (z-index 20) WHILE the
+// menu is open — permanently raising it clips the progress dot, since
+// bottom-box's opaque background overlaps the progress bar's vertical band.
+function setSpeedMenuOpen(open){
+  document.getElementById('speed-menu').classList.toggle('open',open);
+  document.getElementById('bottom-box').style.zIndex=open?'25':'';
+}
+function toggleSpeedMenu(e){
+  if(e) e.stopPropagation();
+  setSpeedMenuOpen(!document.getElementById('speed-menu').classList.contains('open'));
+}
+function setSpeed(rate){
+  aud.playbackRate=rate;
+  document.getElementById('speed-btn').textContent=rate+'x ▾';
+  setSpeedMenuOpen(false);
+  document.querySelectorAll('.speed-opt').forEach(el=>{
+    el.classList.toggle('active',parseFloat(el.dataset.rate)===rate);
+  });
+}
+document.addEventListener('click',(e)=>{
+  const wrap=document.getElementById('speed-wrap');
+  if(!wrap.contains(e.target)) setSpeedMenuOpen(false);
+});
+
+// ── CHAPTER NAV ──
+function skipNext(){
+  if(cur<slides.length-1){
+    cur++;
+    aud.currentTime=slides[cur].time;
+    render(cur);
+  }
+}
+function skipPrev(){
+  const slideStart=slides[cur].time;
+  if(aud.currentTime-slideStart>3&&cur>0){
+    // more than 3s into current slide: go back to start of current slide
+    aud.currentTime=slideStart;
+    updateProgressBar();
+  } else if(cur>0){
+    // within 3s of start: go to previous slide
+    cur--;
+    aud.currentTime=slides[cur].time;
+    render(cur);
+  } else {
+    // first slide: restart
+    aud.currentTime=0;
+    updateProgressBar();
+  }
+}
+
+// ── KEYBOARD ──
+// Arrows scrub audio 10s (not chapter-skip — that's the Prev/Next buttons only).
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){e.preventDefault();scrubBy(10);}
+  if(e.key==='ArrowLeft'){e.preventDefault();scrubBy(-10);}
+  if(e.key===' '){e.preventDefault();togglePlay();}
+});
+
+// ── ACTION BOX OVERFLOW TRIMMING ──
+// Boxes are always authored cumulative (every street, oldest first — see
+// PLO_LOCKED_SPEC.md §9). If that ever overflows the fixed, non-scrolling
+// action-zone, trim folded (never all-in) players' lines out of the OLDEST
+// history first, least-impactful player first, one player at a time, until
+// it fits. This only ever fires when content actually overflows — normal
+// slides are untouched.
+function renderBoxesInto(container,boxes){
+  container.innerHTML='';
+  boxes.forEach(box=>{
+    const d=document.createElement('div');d.className='ab';
+    const lines=box.lines;
+    if(lines.length>4){
+      const mid=Math.ceil(lines.length/2);
+      const left=lines.slice(0,mid),right=lines.slice(mid);
+      let h=`<div class="sl">${box.street}</div><div class="cols"><div>`;
+      left.forEach(l=>{const cls=l.hero?'hq':'pos';h+=`<div class="al"><span class="${cls}">${l.pos}:</span> <span class="act">${l.act}</span></div>`;});
+      h+=`</div><div>`;
+      right.forEach(l=>{const cls=l.hero?'hq':'pos';h+=`<div class="al"><span class="${cls}">${l.pos}:</span> <span class="act">${l.act}</span></div>`;});
+      h+=`</div></div>`;
+      d.innerHTML=h;
+    } else {
+      let h=`<div class="sl">${box.street}</div>`;
+      lines.forEach(l=>{const cls=l.hero?'hq':'pos';h+=`<div class="al"><span class="${cls}">${l.pos}:</span> <span class="act">${l.act}</span></div>`;});
+      d.innerHTML=h;
+    }
+    container.appendChild(d);
+  });
+}
+const STREET_PRIORITY={'PRE-FLOP':0,'FLOP':1,'TURN':2,'RIVER':3,'SHOWDOWN':4};
+function trimCandidates(boxes,players,slide){
+  const candidates=[];
+  Object.keys(players).forEach(key=>{
+    if(key==='hero') return;
+    const ps=players[key];
+    if(!ps||!ps.folded||ps.allIn) return;
+    const label=npLabel(key,SEATS[key],slide);
+    let foldStreet=null,hadPriorAction=false;
+    outer:
+    for(let bi=0;bi<boxes.length;bi++){
+      const lines=boxes[bi].lines;
+      for(let li=0;li<lines.length;li++){
+        if(lines[li].pos!==label) continue;
+        if(/fold/i.test(lines[li].act)){ foldStreet=boxes[bi].street; break outer; }
+        hadPriorAction=true;
+      }
+    }
+    if(foldStreet===null) return; // no fold line on record — never trim without one
+    const streetP=STREET_PRIORITY[foldStreet]!==undefined?STREET_PRIORITY[foldStreet]:99;
+    const subP=(streetP===0&&!hadPriorAction)?0:1; // instant preflop fold ranks above a fold after acting
+    candidates.push({label,priority:streetP*10+subP});
+  });
+  candidates.sort((a,b)=>a.priority-b.priority);
+  return candidates.map(c=>c.label);
+}
+function trimPlayerFromBoxes(boxes,label){
+  return boxes.map(box=>({street:box.street,lines:box.lines.filter(l=>l.pos!==label)}))
+              .filter(box=>box.lines.length>0);
+}
+
+// ── RENDER ──
+function showZones(type){
+  document.getElementById('table-zone').style.display  =(type==='hand')?'flex':'none';
+  document.getElementById('action-zone').style.display =(type==='hand')?'flex':'none';
+  document.getElementById('concept-zone').style.display=(type==='concept'||type==='hand-concept')?'flex':'none';
+  document.getElementById('title-zone').style.display  =(type==='title')?'flex':'none';
+}
+
+function render(idx){
+  const slide=slides[idx];
+  const total=slides.length;
+  document.getElementById('snb').textContent=`${idx+1}/${total}`;
+  document.getElementById('bt').innerHTML=slide.bottomText||'';
+
+  const tbStakes=document.getElementById('tb-stakes'),tbStakesDot=document.getElementById('tb-stakes-dot');
+  if(slide.type==='hand'){
+    document.getElementById('tb-hand').textContent=slide.handLabel||'HAND 2';
+    document.getElementById('tb-dec').textContent=slide.location||slide.shortLabel||slide.dec;
+    tbStakes.textContent=slide.stakes||'$1/$2/$5 PLO';
+    tbStakes.style.display='inline';
+    tbStakesDot.style.display='inline';
+  } else if(slide.type==='hand-concept'){
+    document.getElementById('tb-hand').textContent='PLO BATTLE PLAN';
+    document.getElementById('tb-dec').textContent=slide.location||slide.shortLabel||'EPISODE 6';
+    tbStakes.style.display='none';
+    tbStakesDot.style.display='none';
+  } else {
+    document.getElementById('tb-hand').textContent='PLO BATTLE PLAN';
+    document.getElementById('tb-dec').textContent='EPISODE 6';
+    tbStakes.style.display='none';
+    tbStakesDot.style.display='none';
+  }
+
+  showZones(slide.type);
+
+  if(slide.type==='title'){
+    const tz=document.getElementById('title-zone');
+    const subCls=slide.bigTakeaway?'subtitle big':'subtitle';
+    tz.innerHTML=`<h1>${slide.heading}</h1>
+<div class="${subCls}">${slide.subtitle||''}</div>
+${slide.subtitle2?`<div class="${subCls}" style="margin-top:10px">${slide.subtitle2}</div>`:''}
+<div class="host">${slide.host||''}</div>
+${slide.bottomText?`<div class="subtitle" style="margin-top:8px;font-size:.85rem">${slide.bottomText}</div>`:''}`;
+  }
+
+  if(slide.type==='concept'){
+    const cz=document.getElementById('concept-zone');
+    let h=`<h2>${slide.heading}</h2><ul>`;
+    slide.items.forEach(item=>{h+=`<li${item.sub?' class="sub"':''}>${item.text}</li>`;});
+    h+=`</ul>`;
+    if(slide.insight) h+=`<div class="insight-box">${slide.insight}</div>`;
+    cz.innerHTML=h;
+  }
+
+  if(slide.type==='hand-concept'){
+    const cz=document.getElementById('concept-zone');
+    cz.innerHTML=`<h2>${slide.heading}</h2>${slide.content||''}${slide.insight?`<div class="insight-box">${slide.insight}</div>`:''}`;
+  }
+
+  if(slide.type==='hand'){
+    const abc=document.getElementById('ab-container');
+    const zone=document.getElementById('action-zone');
+    let workingBoxes=slide.boxes;
+    renderBoxesInto(abc,workingBoxes);
+    if(abc.scrollHeight>zone.clientHeight){
+      const candidates=trimCandidates(workingBoxes,slide.players,slide);
+      for(const label of candidates){
+        workingBoxes=trimPlayerFromBoxes(workingBoxes,label);
+        renderBoxesInto(abc,workingBoxes);
+        if(abc.scrollHeight<=zone.clientHeight) break;
+      }
+    }
+    const order=['mp','utg2','utg1','lj','hj','co','btn','sb','hero'];
+    document.getElementById('sl').innerHTML=order.map(k=>renderSeat(k,SEATS[k],slide.players[k],slide)).join('');
+    document.getElementById('bl').innerHTML=boardRow(CX,CY-15,slide.board);
+    const potChipY=CY+55;
+    const swept=slide.potSwept||0;
+    let potHTML=swept>0?drawPotChips(CX,potChipY,swept):'';
+    if(slide.pots&&slide.pots.length>=2){
+      const total=slide.pots.reduce((s,p)=>s+p.amount,0);
+      const label=`Total Pot: $${total}`,w=Math.max(88,label.length*7+20);
+      potHTML+=`<rect x="${CX-w/2}" y="${potChipY+16}" width="${w}" height="22" rx="11" fill="#111" opacity=".85"/>
+<text x="${CX}" y="${potChipY+31}" text-anchor="middle" font-size="13" fill="#fff" font-weight="700" font-family="Arial">${label}</text>`;
+      potHTML+=renderPotBadges(slide.pots);
+    } else {
+      potHTML+=`<rect x="${CX-44}" y="${potChipY+16}" width="88" height="22" rx="11" fill="#111" opacity=".85"/>
+<text x="${CX}" y="${potChipY+31}" text-anchor="middle" font-size="13" fill="#fff" font-weight="700" font-family="Arial">Pot: $${slide.pot}</text>`;
+    }
+    document.getElementById('pl').innerHTML=potHTML;
+    const _heroPos=slide.heroPos||SEATS.hero.heroPos||'BB';
+    document.getElementById('btl').innerHTML=posBtns(
+      findSlotAngle('BTN',_heroPos), findSlotAngle('SB',_heroPos), findSlotAngle('BB',_heroPos));
+  }
+}
+
+render(0);
+</script>
+</body>
+</html>
